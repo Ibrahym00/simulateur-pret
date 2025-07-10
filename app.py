@@ -6,6 +6,10 @@ from export_pdf import generer_pdf
 
 st.set_page_config(page_title="Simulateur de Prêt Bancaire", layout="centered")
 
+# Gestion de l'état de session pour PDF
+if "pdf_bytes" not in st.session_state:
+    st.session_state.pdf_bytes = None
+
 st.title("🏦 Simulateur de Prêt Bancaire")
 st.markdown("Calculez facilement vos mensualités avec ou sans assurance, et visualisez votre tableau d'amortissement.")
 
@@ -73,8 +77,7 @@ if st.button("🚀 Calculer les mensualités"):
                        title="📉 Capital restant dû au fil des mois", template="plotly_white")
         st.plotly_chart(fig2, use_container_width=True)
 
-        st.subheader("📄 Télécharger le rapport PDF")
-
+        # Génération PDF et stockage
         resume_dict = {
             "Montant total du bien (EUR)": capital,
             "Apport personnel (EUR)": apport,
@@ -88,18 +91,25 @@ if st.button("🚀 Calculer les mensualités"):
             "Coût total du prêt (EUR)": round(total, 2),
             "Coût total assurance (EUR)": round(cout_total_assurance, 2),
         }
+        st.session_state.pdf_bytes = generer_pdf(resume_dict, df_amort)
 
-        pdf_bytes = generer_pdf(resume_dict, df_amort)
-        st.download_button("📥 Télécharger le PDF", data=pdf_bytes, file_name="simulation_pret.pdf", mime="application/pdf")
+# Affichage du bouton PDF à part
+if st.session_state.pdf_bytes:
+    st.subheader("📄 Télécharger le rapport PDF")
+    st.download_button("📥 Télécharger le PDF", data=st.session_state.pdf_bytes, file_name="simulation_pret.pdf", mime="application/pdf")
+
+# Lien vers le convertisseur de devises
 st.markdown("### 💱 Besoin de convertir en une autre devise ?")
 st.markdown(
     "[🔗 Accédez à notre convertisseur de devises ici](https://convertisseur-devises-kt5zgp7dgpw8dzkosvut75.streamlit.app/)",
     unsafe_allow_html=True
 )
+
+# Signature
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; font-size: 14px;'>"
-    "© 2025 - Crée  par <strong>Ibrahim DABRE </strong>"
+    "© 2025 - Créé par <strong>Ibrahim DABRE</strong>"
     "</div>",
     unsafe_allow_html=True
 )
